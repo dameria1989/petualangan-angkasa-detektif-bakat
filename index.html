@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Petualangan Angkasa: Detektif Bakat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: white;
+            background-image: radial-gradient(circle at 50% 50%, #1e293b 0%, #0f172a 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* Starry background animation */
+        .stars {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: -1;
+            background: transparent url('https://www.transparenttextures.com/patterns/stardust.png') repeat top center;
+            animation: moveStars 50s linear infinite;
+            opacity: 0.5;
+        }
+
+        @keyframes moveStars {
+            from { background-position: 0 0; }
+            to { background-position: -10000px 5000px; }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .option-btn {
+            transition: all 0.2s;
+        }
+        .option-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4">
+
+    <div class="stars"></div>
+
+    <div id="game-container" class="w-full max-w-2xl bg-slate-800/80 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-700 p-6 md:p-10 relative">
+        <!-- Views will be injected here via JavaScript -->
+    </div>
+
+    <script>
+        // Data Pertanyaan dan Pilihan
+        const questions = [
+            {
+                scenario: "Krisis Navigasi! 🚨",
+                text: "Kamu sedang berada di ruang kemudi, tiba-tiba sistem navigasi pesawat rusak karena badai matahari. Apa yang akan kamu lakukan untuk menyelamatkan pesawat?",
+                options: [
+                    { text: "Menghitung ulang koordinat lintasan secara manual menggunakan rumus matematika.", type: "logis" },
+                    { text: "Menggambar peta rute alternatif berdasarkan posisi rasi bintang dari jendela.", type: "kreatif" },
+                    { text: "Mengumpulkan kru melalui interkom untuk menenangkan mereka agar tidak panik.", type: "sosial" },
+                    { text: "Membongkar panel navigasi dan mencoba menyambungkan kabel yang putus.", type: "praktis" }
+                ]
+            },
+            {
+                scenario: "Kontak Alien! 👽",
+                text: "Sensor mendeteksi ada kapal makhluk asing mendekati markas. Kita belum tahu apakah mereka ramah atau berbahaya. Tindakanmu?",
+                options: [
+                    { text: "Menganalisis pola pergerakan kapal mereka untuk memprediksi niatnya.", type: "logis" },
+                    { text: "Mencoba membuat pesan komunikasi menggunakan simbol gambar atau nada musik.", type: "kreatif" },
+                    { text: "Menjadi sukarelawan untuk menyapa mereka terlebih dahulu lewat radio.", type: "sosial" },
+                    { text: "Menyiapkan sistem pertahanan fisik dan mengecek perlengkapan keamanan.", type: "praktis" }
+                ]
+            },
+            {
+                scenario: "Waktu Istirahat ☕",
+                text: "Akhir pekan di luar angkasa tiba, tapi semua kru merasa bosan. Bagaimana caramu membuat suasana menjadi lebih seru?",
+                options: [
+                    { text: "Membuat permainan teka-teki papan strategi untuk dimainkan bersama.", type: "logis" },
+                    { text: "Mendekorasi ulang ruang rekreasi dan membuat pertunjukan seni kecil-kecilan.", type: "kreatif" },
+                    { text: "Mengadakan sesi curhat dan ngobrol santai agar semua kru merasa lebih dekat.", type: "sosial" },
+                    { text: "Merakit mesin pembuat camilan otomatis dari barang-barang bekas di gudang.", type: "praktis" }
+                ]
+            },
+            {
+                scenario: "Eksplorasi Planet Baru 🌍",
+                text: "Kapal mendarat di planet misterius X-99. Kamu ditunjuk masuk ke tim eksplorasi. Apa yang menjadi fokus utamamu?",
+                options: [
+                    { text: "Mengumpulkan data iklim, suhu, dan memetakan struktur tanah planet.", type: "logis" },
+                    { text: "Memotret dan membuat sketsa pemandangan serta flora/fauna yang unik.", type: "kreatif" },
+                    { text: "Mencari tanda-tanda kehidupan untuk mencoba berkomunikasi dengan penduduk asli.", type: "sosial" },
+                    { text: "Mencari sumber daya mineral dengan alat bor dan membawa sampel fisik ke lab.", type: "praktis" }
+                ]
+            },
+            {
+                scenario: "Misi Selesai, Pulang ke Bumi! 🚀",
+                text: "Perjalanan hampir selesai dan kalian bersiap pulang ke Bumi. Apa tugas terakhir yang kamu pilih?",
+                options: [
+                    { text: "Mengecek kembali seluruh data penerbangan untuk memastikan pendaratan presisi.", type: "logis" },
+                    { text: "Membuat desain logo dan video dokumenter untuk merayakan keberhasilan misi.", type: "kreatif" },
+                    { text: "Menyiapkan naskah pidato untuk menyapa keluarga dan wartawan saat mendarat.", type: "sosial" },
+                    { text: "Mengecek mesin pendorong dan roda pendaratan secara fisik agar semua aman.", type: "praktis" }
+                ]
+            }
+        ];
+
+        // Hasil Bakat
+        const talentResults = {
+            "logis": {
+                title: "Sang Analis Strategi 🧠",
+                description: "Kamu memiliki bakat Logis-Matematis yang kuat. Kamu suka memecahkan masalah, menganalisis data, dan berpikir secara kritis. Kamu adalah otak di balik setiap perencanaan yang sukses!",
+                recommendations: "Klub Sains/KIR, Olimpiade Matematika/IPA, Ekstrakurikuler Coding/Komputer, atau Klub Catur."
+            },
+            "kreatif": {
+                title: "Sang Visioner Imajinatif 🎨",
+                description: "Kamu memiliki bakat Seni dan Kreativitas yang tinggi. Kamu melihat dunia dengan cara yang berbeda, suka mengekspresikan diri, dan memiliki ide-ide out-of-the-box yang memukau!",
+                recommendations: "Ekstrakurikuler Jurnalistik/Mading, Teater, Klub Menggambar/Desain, Musik, atau Paduan Suara."
+            },
+            "sosial": {
+                title: "Sang Diplomat Hangat 🤝",
+                description: "Kamu memiliki kecerdasan Interpersonal/Sosial yang hebat. Kamu mudah bergaul, berempati tinggi, dan mampu memimpin serta menyatukan teman-temanmu dalam tim.",
+                recommendations: "OSIS, MPK, PMR (Palang Merah Remaja), Pramuka, atau Klub Debat/Bahasa."
+            },
+            "praktis": {
+                title: "Sang Insinyur Handal ⚙️",
+                description: "Kamu memiliki bakat Kinestetik dan Praktis (Teknis). Kamu adalah tipe 'Learning by Doing'. Kamu suka membuat, merakit, dan aktif bergerak daripada sekadar duduk diam membaca teori.",
+                recommendations: "Ekstrakurikuler Robotik, Pramuka, Pecinta Alam, Klub Olahraga, atau Keterampilan Kriya."
+            }
+        };
+
+        // State Permainan
+        let currentQuestionIndex = 0;
+        let scores = {
+            logis: 0,
+            kreatif: 0,
+            sosial: 0,
+            praktis: 0
+        };
+
+        const container = document.getElementById('game-container');
+
+        // Fungsi untuk mengacak array (Fisher-Yates) agar pilihan jawaban tidak selalu di posisi yang sama
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // Render Layar Mulai
+        function renderStartScreen() {
+            container.innerHTML = `
+                <div class="text-center fade-in">
+                    <div class="mb-6 text-6xl">🚀</div>
+                    <h1 class="text-3xl md:text-4xl font-extrabold mb-4 text-blue-400">Petualangan Angkasa:<br>Detektif Bakat</h1>
+                    <p class="text-slate-300 mb-8 leading-relaxed">
+                        Selamat datang, Kadet Luar Angkasa! 
+                        Kamu akan menghadapi 5 tantangan dalam misimu di markas galaksi. 
+                        Pilihan yang kamu ambil akan mengungkapkan rahasia potensi dan bakat terpendammu.
+                    </p>
+                    <button onclick="startGame()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-full shadow-lg transition transform hover:-translate-y-1 text-lg">
+                        Mulai Misi Sekarang
+                    </button>
+                </div>
+            `;
+        }
+
+        // Render Layar Pertanyaan
+        function renderQuestion() {
+            const question = questions[currentQuestionIndex];
+            
+            // Acak pilihan agar lebih natural
+            const shuffledOptions = shuffleArray([...question.options]);
+
+            let optionsHtml = '';
+            shuffledOptions.forEach((opt) => {
+                optionsHtml += `
+                    <button onclick="selectOption('${opt.type}')" class="option-btn w-full text-left bg-slate-700 hover:bg-blue-600 border border-slate-600 p-4 rounded-xl mb-3 text-slate-100 font-medium">
+                        ${opt.text}
+                    </button>
+                `;
+            });
+
+            const progress = ((currentQuestionIndex) / questions.length) * 100;
+
+            container.innerHTML = `
+                <div class="fade-in">
+                    <div class="flex justify-between items-center mb-4 text-sm font-semibold text-slate-400">
+                        <span>Misi ${currentQuestionIndex + 1} dari ${questions.length}</span>
+                    </div>
+                    <div class="w-full bg-slate-700 rounded-full h-2.5 mb-6">
+                        <div class="bg-blue-500 h-2.5 rounded-full transition-all duration-500" style="width: ${progress}%"></div>
+                    </div>
+                    
+                    <h2 class="text-2xl font-bold mb-2 text-blue-300">${question.scenario}</h2>
+                    <p class="text-lg text-slate-200 mb-6 leading-relaxed">${question.text}</p>
+                    
+                    <div class="flex flex-col">
+                        ${optionsHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Render Layar Hasil
+        function renderResult() {
+            // Cari skor tertinggi
+            let highestScore = -1;
+            let topTalent = '';
+
+            for (const [type, score] of Object.entries(scores)) {
+                if (score > highestScore) {
+                    highestScore = score;
+                    topTalent = type;
+                }
+            }
+
+            const result = talentResults[topTalent];
+
+            container.innerHTML = `
+                <div class="text-center fade-in">
+                    <div class="inline-block p-4 rounded-full bg-slate-700 mb-4 border-2 border-blue-400">
+                        <div class="text-5xl">✨</div>
+                    </div>
+                    <h2 class="text-xl text-slate-300 font-semibold mb-1">Identitas Bakatmu Adalah:</h2>
+                    <h1 class="text-3xl md:text-4xl font-extrabold mb-6 text-blue-400">${result.title}</h1>
+                    
+                    <div class="bg-slate-700/50 p-6 rounded-xl border border-slate-600 mb-6 text-left">
+                        <p class="text-slate-200 mb-4 leading-relaxed">${result.description}</p>
+                        <h3 class="font-bold text-blue-300 mb-2">💡 Rekomendasi Ekstrakurikuler/Kegiatan:</h3>
+                        <p class="text-slate-300 italic">${result.recommendations}</p>
+                    </div>
+
+                    <p class="text-sm text-slate-400 mb-8">
+                        *Ingat, setiap orang itu unik. Hasil ini adalah gambaran potensimu yang paling menonjol saat ini. Kamu selalu bisa mempelajari hal baru!
+                    </p>
+
+                    <button onclick="resetGame()" class="bg-slate-600 hover:bg-slate-500 text-white font-bold py-3 px-8 rounded-full transition transform hover:-translate-y-1">
+                        Mainkan Ulang
+                    </button>
+                </div>
+            `;
+        }
+
+        // Logika Game
+        window.startGame = function() {
+            currentQuestionIndex = 0;
+            scores = { logis: 0, kreatif: 0, sosial: 0, praktis: 0 };
+            renderQuestion();
+        };
+
+        window.selectOption = function(type) {
+            scores[type]++;
+            currentQuestionIndex++;
+
+            if (currentQuestionIndex < questions.length) {
+                renderQuestion();
+            } else {
+                renderResult();
+            }
+        };
+
+        window.resetGame = function() {
+            renderStartScreen();
+        };
+
+        // Mulai aplikasi
+        renderStartScreen();
+
+    </script>
+</body>
+</html>
